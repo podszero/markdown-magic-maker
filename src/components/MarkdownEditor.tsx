@@ -1,9 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useDropzone } from "react-dropzone";
 import MarkdownToolbar from "./MarkdownToolbar";
 import FileSidebar from "./FileSidebar";
 import DocumentOutline from "./DocumentOutline";
+import DropOverlay from "./DropOverlay";
 import { useMarkdownFiles } from "@/hooks/useMarkdownFiles";
 import {
   FileText,
@@ -41,6 +43,7 @@ const MarkdownEditor = () => {
     duplicateFile,
     exportFile,
     importFile,
+    importFromDrop,
     searchFiles,
   } = useMarkdownFiles();
 
@@ -54,6 +57,24 @@ const MarkdownEditor = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const content = activeFile?.content || "";
+
+  // Drag & drop
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      importFromDrop(acceptedFiles);
+    },
+    [importFromDrop]
+  );
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "text/markdown": [".md", ".markdown"],
+      "text/plain": [".txt"],
+    },
+    noClick: true,
+    noKeyboard: true,
+  });
 
   const handleContentChange = useCallback(
     (newContent: string) => {
@@ -148,7 +169,10 @@ const MarkdownEditor = () => {
   );
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div {...getRootProps()} className="flex h-screen bg-background overflow-hidden relative">
+      <input {...getInputProps()} />
+      <DropOverlay isDragActive={isDragActive} />
+
       {/* Sidebar */}
       {!focusMode && (
         <FileSidebar
@@ -277,7 +301,7 @@ const MarkdownEditor = () => {
                   value={content}
                   onChange={(e) => handleContentChange(e.target.value)}
                   className="editor-textarea flex-1 custom-scroll"
-                  placeholder="Tulis Markdown di sini..."
+                  placeholder="Tulis Markdown di sini... (atau drag & drop file .md)"
                   spellCheck={false}
                 />
               </div>

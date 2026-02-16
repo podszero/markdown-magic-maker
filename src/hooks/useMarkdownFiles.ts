@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { MarkdownFile, DEFAULT_CONTENT } from "@/types/markdown";
+import { toast } from "sonner";
 
 const STORAGE_KEY = "markdown-editor-files";
 const ACTIVE_FILE_KEY = "markdown-editor-active";
@@ -143,9 +144,30 @@ export function useMarkdownFiles() {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".md,.markdown,.txt";
+    input.multiple = true;
     input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
+      const fileList = (e.target as HTMLInputElement).files;
+      if (!fileList || fileList.length === 0) return;
+      processFileList(Array.from(fileList));
+    };
+    input.click();
+  }, []);
+
+  const processFileList = useCallback((fileList: File[]) => {
+    const validFiles = fileList.filter((f) => {
+      const ext = f.name.split(".").pop()?.toLowerCase();
+      return ext === "md" || ext === "markdown" || ext === "txt";
+    });
+
+    if (validFiles.length === 0) {
+      toast.error("Format file tidak didukung. Gunakan .md, .markdown, atau .txt");
+      return;
+    }
+
+    let lastId = "";
+    let processed = 0;
+
+    validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (ev) => {
         const content = ev.target?.result as string;
@@ -157,13 +179,28 @@ export function useMarkdownFiles() {
           createdAt: Date.now(),
           updatedAt: Date.now(),
         };
+        lastId = newFile.id;
         setFiles((prev) => [newFile, ...prev]);
-        setActiveFileId(newFile.id);
+        processed++;
+        if (processed === validFiles.length) {
+          setActiveFileId(lastId);
+          toast.success(
+            validFiles.length === 1
+              ? `"${title}" berhasil diimport`
+              : `${validFiles.length} file berhasil diimport`
+          );
+        }
       };
       reader.readAsText(file);
-    };
-    input.click();
+    });
   }, []);
+
+  const importFromDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      processFileList(acceptedFiles);
+    },
+    [processFileList]
+  );
 
   const searchFiles = useCallback(
     (query: string) => {
@@ -190,6 +227,7 @@ export function useMarkdownFiles() {
     duplicateFile,
     exportFile,
     importFile,
+    importFromDrop,
     searchFiles,
   };
 }
