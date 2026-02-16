@@ -14,6 +14,7 @@ import {
   Maximize,
   Minimize,
   Save,
+  Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -120,12 +121,13 @@ const MarkdownEditor = () => {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header className="flex items-center justify-between px-2 md:px-3 py-1.5 border-b border-border flex-shrink-0 gap-2">
+          {/* Left: sidebar toggle + file name */}
           <div className="flex items-center gap-1.5 min-w-0">
             {!focusMode && (
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className={`toolbar-btn ${sidebarOpen ? "active" : ""}`}
-                title="Toggle sidebar"
+                title="Toggle sidebar (Files)"
               >
                 <PanelLeft size={16} />
               </button>
@@ -142,6 +144,7 @@ const MarkdownEditor = () => {
             </span>
           </div>
 
+          {/* Right: controls */}
           <div className="flex items-center gap-0.5">
             {/* View toggle */}
             <div className="flex items-center p-px rounded-md bg-secondary">
@@ -166,6 +169,15 @@ const MarkdownEditor = () => {
                 </button>
               ))}
             </div>
+
+            {/* Toolbar toggle - in header */}
+            <button
+              onClick={() => setToolbarVisible(!toolbarVisible)}
+              className={`toolbar-btn ${toolbarVisible ? "active" : ""}`}
+              title={toolbarVisible ? "Sembunyikan toolbar" : "Tampilkan toolbar"}
+            >
+              <Wrench size={14} />
+            </button>
 
             <button
               onClick={() => setOutlineOpen(!outlineOpen)}
@@ -194,11 +206,7 @@ const MarkdownEditor = () => {
             {/* Editor panel */}
             {viewMode !== "preview" && (
               <div className={`flex flex-col ${viewMode === "split" ? "w-1/2 border-r border-border" : "w-full"}`}>
-                <MarkdownToolbar
-                  onInsert={handleInsert}
-                  isVisible={toolbarVisible}
-                  onToggle={() => setToolbarVisible(!toolbarVisible)}
-                />
+                <MarkdownToolbar onInsert={handleInsert} isVisible={toolbarVisible} />
                 <textarea
                   ref={textareaRef}
                   value={content}
@@ -231,7 +239,7 @@ const MarkdownEditor = () => {
           )}
         </div>
 
-        {/* Footer status bar */}
+        {/* Footer */}
         <footer
           className="flex items-center justify-between px-3 py-1 border-t border-border text-[10px] text-muted-foreground flex-shrink-0"
           style={{ fontFamily: "'JetBrains Mono', monospace" }}

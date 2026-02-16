@@ -15,14 +15,11 @@ import {
   Image,
   Minus,
   Table,
-  ChevronUp,
-  ChevronDown,
 } from "lucide-react";
 
 interface ToolbarProps {
   onInsert: (before: string, after?: string) => void;
   isVisible: boolean;
-  onToggle: () => void;
 }
 
 const tools = [
@@ -52,52 +49,36 @@ const tools = [
   },
 ];
 
-const MarkdownToolbar = ({ onInsert, isVisible, onToggle }: ToolbarProps) => {
+const MarkdownToolbar = ({ onInsert, isVisible }: ToolbarProps) => {
   return (
-    <div className="flex-shrink-0 border-b" style={{ borderColor: "hsl(var(--toolbar-border))" }}>
-      {/* Toggle bar - always visible */}
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-center py-0.5 transition-colors hover:bg-accent/50"
-        style={{ background: "hsl(var(--toolbar-bg))" }}
-        title={isVisible ? "Sembunyikan toolbar" : "Tampilkan toolbar"}
-      >
-        {isVisible ? (
-          <ChevronUp size={12} className="text-muted-foreground" />
-        ) : (
-          <ChevronDown size={12} className="text-muted-foreground" />
+    <div
+      className="overflow-hidden transition-all duration-250 ease-in-out border-b flex-shrink-0"
+      style={{
+        maxHeight: isVisible ? "36px" : "0px",
+        opacity: isVisible ? 1 : 0,
+        borderColor: isVisible ? "hsl(var(--toolbar-border))" : "transparent",
+        background: "hsl(var(--toolbar-bg))",
+      }}
+    >
+      <div className="flex items-center gap-px px-2.5 py-1 overflow-x-auto custom-scroll">
+        {tools.map((tool, i) =>
+          "divider" in tool ? (
+            <div
+              key={i}
+              className="w-px h-4 mx-1 flex-shrink-0"
+              style={{ background: "hsl(var(--toolbar-border))" }}
+            />
+          ) : (
+            <button
+              key={i}
+              onClick={() => onInsert(tool.action, tool.after)}
+              className="toolbar-btn"
+              title={tool.title}
+            >
+              <tool.icon size={14} />
+            </button>
+          )
         )}
-      </button>
-
-      {/* Toolbar content */}
-      <div
-        className="overflow-hidden transition-all duration-200 ease-in-out"
-        style={{
-          maxHeight: isVisible ? "40px" : "0px",
-          opacity: isVisible ? 1 : 0,
-          background: "hsl(var(--toolbar-bg))",
-        }}
-      >
-        <div className="flex items-center gap-px px-2 py-1 overflow-x-auto custom-scroll">
-          {tools.map((tool, i) =>
-            "divider" in tool ? (
-              <div
-                key={i}
-                className="w-px h-4 mx-0.5 flex-shrink-0"
-                style={{ background: "hsl(var(--toolbar-border))" }}
-              />
-            ) : (
-              <button
-                key={i}
-                onClick={() => onInsert(tool.action, tool.after)}
-                className="toolbar-btn"
-                title={tool.title}
-              >
-                <tool.icon size={14} />
-              </button>
-            )
-          )}
-        </div>
       </div>
     </div>
   );
