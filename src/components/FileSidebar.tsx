@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { format } from "timeago.js";
 import {
   FilePlus,
   Search,
@@ -76,19 +77,7 @@ const FileSidebar = ({
     setRenamingId(null);
   };
 
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 1) return "Baru saja";
-    if (diffMins < 60) return `${diffMins}m`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h`;
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays < 7) return `${diffDays}d`;
-    return date.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
-  };
+  const formatDate = (timestamp: number) => format(timestamp, "id_ID");
 
   const getPreview = (content: string) => {
     const lines = content.split("\n").filter((l) => l.trim() && !l.startsWith("#"));

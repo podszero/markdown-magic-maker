@@ -1,5 +1,6 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
+import hotkeys from "hotkeys-js";
 import MarkdownToolbar from "./MarkdownToolbar";
 import FileSidebar from "./FileSidebar";
 import DocumentOutline from "./DocumentOutline";
@@ -8,26 +9,17 @@ import MarkdownPreview from "./MarkdownPreview";
 import EditorWithLineNumbers from "./EditorWithLineNumbers";
 import EditorSettings from "./EditorSettings";
 import { useMarkdownFiles } from "@/hooks/useMarkdownFiles";
+import { useEditorStore } from "@/stores/useEditorStore";
 import {
-  FileText,
-  Eye,
-  Columns,
-  PanelLeft,
-  ListTree,
-  Maximize,
-  Minimize,
-  Save,
-  Wrench,
-  Sun,
-  Moon,
+  FileText, Eye, Columns, PanelLeft, ListTree,
+  Maximize, Minimize, Save, Wrench, Sun, Moon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
+  Tooltip, TooltipContent, TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type ViewMode = "split" | "editor" | "preview";
 
@@ -39,14 +31,24 @@ const MarkdownEditor = () => {
   } = useMarkdownFiles();
 
   const { theme, setTheme } = useTheme();
-  const [viewMode, setViewMode] = useState<ViewMode>("split");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [outlineOpen, setOutlineOpen] = useState(false);
-  const [focusMode, setFocusMode] = useState(false);
-  const [toolbarVisible, setToolbarVisible] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  const [showLineNumbers, setShowLineNumbers] = useState(false);
-  const [syncScroll, setSyncScroll] = useState(true);
+  const isMobile = useIsMobile();
+
+  // Zustand store
+  const viewMode = useEditorStore((s) => s.viewMode);
+  const sidebarOpen = useEditorStore((s) => s.sidebarOpen);
+  const outlineOpen = useEditorStore((s) => s.outlineOpen);
+  const focusMode = useEditorStore((s) => s.focusMode);
+  const toolbarVisible = useEditorStore((s) => s.toolbarVisible);
+  const showLineNumbers = useEditorStore((s) => s.showLineNumbers);
+  const syncScroll = useEditorStore((s) => s.syncScroll);
+  const setViewMode = useEditorStore((s) => s.setViewMode);
+  const setSidebarOpen = useEditorStore((s) => s.setSidebarOpen);
+  const toggleSidebar = useEditorStore((s) => s.toggleSidebar);
+  const toggleOutline = useEditorStore((s) => s.toggleOutline);
+  const toggleFocusMode = useEditorStore((s) => s.toggleFocusMode);
+  const toggleToolbar = useEditorStore((s) => s.toggleToolbar);
+  const setOutlineOpen = useEditorStore((s) => s.setOutlineOpen);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const isScrollSyncing = useRef(false);
@@ -99,8 +101,7 @@ const MarkdownEditor = () => {
       const el = e.currentTarget;
       const ratio = el.scrollTop / (el.scrollHeight - el.clientHeight || 1);
       if (previewRef.current) {
-        const preview = previewRef.current;
-        preview.scrollTop = ratio * (preview.scrollHeight - preview.clientHeight);
+        previewRef.current.scrollTop = ratio * (previewRef.current.scrollHeight - previewRef.current.clientHeight);
       }
       requestAnimationFrame(() => { isScrollSyncing.current = false; });
     },
@@ -122,51 +123,63 @@ const MarkdownEditor = () => {
   );
 
   // Outline heading click
-  const handleOutlineHeadingClick = useCallback(
-    (id: string) => {
-      if (previewRef.current) {
-        const el = previewRef.current.querySelector(`#${CSS.escape(id)}`);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
-          return;
+  const handleOutlineHeadingClick = useCallback((id: string) => {
+    if (previewRef.current) {
+      const el = previewRef.current.querySelector(`#${CSS.escape(id)}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+    }
+    // If preview not visible, try to find heading line in editor
+    if (textareaRef.current) {
+      const lines = content.split("\n");
+      let headingIdx = 0;
+      for (let i = 0; i < lines.length; i++) {
+        if (/^#{1,6}\s/.test(lines[i])) {
+          const text = lines[i].replace(/^#{1,6}\s+/, "").replace(/[*_`~\[\]()#]/g, "").trim();
+          const slug = `heading-${text.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "")}-${headingIdx}`;
+          if (slug === id) {
+            // Scroll textarea to this line
+            const linesBefore = lines.slice(0, i).join("\n").length;
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(linesBefore, linesBefore);
+            // Approximate scroll
+            const lineHeight = 1.75 * 13.6; // ~rem * px
+            textareaRef.current.scrollTop = Math.max(0, i * lineHeight - 100);
+            return;
+          }
+          headingIdx++;
         }
       }
-    },
-    []
-  );
+    }
+  }, [content]);
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts with hotkeys-js
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        switch (e.key.toLowerCase()) {
-          case "b": e.preventDefault(); handleInsert("**", "**"); break;
-          case "i": e.preventDefault(); handleInsert("*", "*"); break;
-          case "s": e.preventDefault(); toast.success("Tersimpan otomatis!"); break;
-          case "n": e.preventDefault(); createFile(); break;
-        }
-      }
+    hotkeys.filter = () => true; // Allow in textareas
+
+    hotkeys("ctrl+b, command+b", (e) => { e.preventDefault(); handleInsert("**", "**"); });
+    hotkeys("ctrl+i, command+i", (e) => { e.preventDefault(); handleInsert("*", "*"); });
+    hotkeys("ctrl+s, command+s", (e) => { e.preventDefault(); toast.success("Tersimpan otomatis!"); });
+    hotkeys("ctrl+n, command+n", (e) => { e.preventDefault(); createFile(); });
+
+    return () => {
+      hotkeys.unbind("ctrl+b, command+b");
+      hotkeys.unbind("ctrl+i, command+i");
+      hotkeys.unbind("ctrl+s, command+s");
+      hotkeys.unbind("ctrl+n, command+n");
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
   }, [handleInsert, createFile]);
 
   // Responsive handler
   useEffect(() => {
-    const check = () => {
-      const mobile = window.innerWidth < 768;
-      const tablet = window.innerWidth < 1024;
-      setIsMobile(mobile);
-      if (mobile) {
-        setSidebarOpen(false); setOutlineOpen(false); setViewMode("editor");
-      } else if (tablet) {
-        setSidebarOpen(false); setViewMode("split");
-      }
-    };
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
+    if (isMobile) {
+      setSidebarOpen(false);
+      setOutlineOpen(false);
+      setViewMode("editor");
+    }
+  }, [isMobile, setSidebarOpen, setOutlineOpen, setViewMode]);
 
   const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
   const charCount = content.length;
@@ -205,7 +218,7 @@ const MarkdownEditor = () => {
         <header className="flex items-center justify-between px-2 md:px-3 py-1.5 border-b border-border flex-shrink-0 gap-1">
           <div className="flex items-center gap-1 min-w-0">
             {!focusMode && (
-              <HeaderButton onClick={() => setSidebarOpen(!sidebarOpen)} active={sidebarOpen} title="Toggle Files">
+              <HeaderButton onClick={toggleSidebar} active={sidebarOpen} title="Toggle Files (Ctrl+\\)">
                 <PanelLeft size={isMobile ? 18 : 16} />
               </HeaderButton>
             )}
@@ -240,36 +253,23 @@ const MarkdownEditor = () => {
               ))}
             </div>
 
-            <HeaderButton onClick={() => setToolbarVisible(!toolbarVisible)} active={toolbarVisible} title={toolbarVisible ? "Hide Toolbar" : "Show Toolbar"}>
+            <HeaderButton onClick={toggleToolbar} active={toolbarVisible} title="Toggle Toolbar">
               <Wrench size={14} />
             </HeaderButton>
 
             <span className="hidden md:inline-flex">
-              <HeaderButton onClick={() => setOutlineOpen(!outlineOpen)} active={outlineOpen} title="Outline">
+              <HeaderButton onClick={toggleOutline} active={outlineOpen} title="Outline">
                 <ListTree size={14} />
               </HeaderButton>
             </span>
 
-            {/* Settings */}
-            <EditorSettings
-              showLineNumbers={showLineNumbers}
-              onToggleLineNumbers={setShowLineNumbers}
-              syncScroll={syncScroll}
-              onToggleSyncScroll={setSyncScroll}
-            />
+            <EditorSettings />
 
             <HeaderButton onClick={() => setTheme(theme === "dark" ? "light" : "dark")} title={theme === "dark" ? "Light Mode" : "Dark Mode"}>
               {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
             </HeaderButton>
 
-            <HeaderButton
-              onClick={() => {
-                setFocusMode(!focusMode);
-                if (!focusMode) { setSidebarOpen(false); setOutlineOpen(false); }
-              }}
-              active={focusMode}
-              title="Focus Mode"
-            >
+            <HeaderButton onClick={toggleFocusMode} active={focusMode} title="Focus Mode">
               {focusMode ? <Minimize size={14} /> : <Maximize size={14} />}
             </HeaderButton>
           </div>
@@ -323,6 +323,7 @@ const MarkdownEditor = () => {
             <span>~{readTime}m</span>
           </div>
           <div className="flex items-center gap-2">
+            <span>{syncScroll && viewMode === "split" ? "⇅ Sync" : ""}</span>
             <span>GFM</span>
             <span className="hidden sm:inline">UTF-8</span>
           </div>
