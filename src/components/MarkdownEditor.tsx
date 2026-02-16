@@ -15,8 +15,16 @@ import {
   Minimize,
   Save,
   Wrench,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type ViewMode = "split" | "editor" | "preview";
 
@@ -36,11 +44,13 @@ const MarkdownEditor = () => {
     searchFiles,
   } = useMarkdownFiles();
 
+  const { theme, setTheme } = useTheme();
   const [viewMode, setViewMode] = useState<ViewMode>("split");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [outlineOpen, setOutlineOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const content = activeFile?.content || "";
@@ -71,6 +81,7 @@ const MarkdownEditor = () => {
     [content, handleContentChange]
   );
 
+  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
@@ -86,16 +97,55 @@ const MarkdownEditor = () => {
     return () => window.removeEventListener("keydown", handler);
   }, [handleInsert, createFile]);
 
+  // Responsive handler
+  useEffect(() => {
+    const check = () => {
+      const mobile = window.innerWidth < 768;
+      const tablet = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (mobile) {
+        setSidebarOpen(false);
+        setOutlineOpen(false);
+        setViewMode("editor");
+      } else if (tablet) {
+        setSidebarOpen(false);
+        setViewMode("split");
+      }
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
   const charCount = content.length;
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
-  useEffect(() => {
-    if (window.matchMedia("(max-width: 768px)").matches) {
-      setSidebarOpen(false);
-      setViewMode("editor");
-    }
-  }, []);
+  const HeaderButton = ({
+    onClick,
+    active,
+    title,
+    children,
+  }: {
+    onClick: () => void;
+    active?: boolean;
+    title: string;
+    children: React.ReactNode;
+  }) => (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          onClick={onClick}
+          className={`toolbar-btn ${active ? "active" : ""}`}
+        >
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="text-[11px] py-1 px-2">
+        {title}
+      </TooltipContent>
+    </Tooltip>
+  );
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -120,39 +170,42 @@ const MarkdownEditor = () => {
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="flex items-center justify-between px-2 md:px-3 py-1.5 border-b border-border flex-shrink-0 gap-2">
-          {/* Left: sidebar toggle + file name */}
-          <div className="flex items-center gap-1.5 min-w-0">
+        <header className="flex items-center justify-between px-2 md:px-3 py-1.5 border-b border-border flex-shrink-0 gap-1">
+          {/* Left */}
+          <div className="flex items-center gap-1 min-w-0">
             {!focusMode && (
-              <button
+              <HeaderButton
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className={`toolbar-btn ${sidebarOpen ? "active" : ""}`}
-                title="Toggle sidebar (Files)"
+                active={sidebarOpen}
+                title="Toggle Files"
               >
-                <PanelLeft size={16} />
-              </button>
+                <PanelLeft size={isMobile ? 18 : 16} />
+              </HeaderButton>
             )}
-            <FileText size={14} className="text-primary flex-shrink-0" />
-            <span className="text-xs font-medium text-foreground truncate" style={{ fontFamily: "'Inter', sans-serif" }}>
+            <FileText size={14} className="text-primary flex-shrink-0 hidden sm:block" />
+            <span
+              className="text-xs font-medium text-foreground truncate max-w-[120px] sm:max-w-[200px]"
+              style={{ fontFamily: "'Inter', sans-serif" }}
+            >
               {activeFile?.title || "Untitled"}
             </span>
             <span
-              className="text-[9px] px-1 py-px rounded bg-secondary text-muted-foreground flex-shrink-0 flex items-center gap-0.5"
+              className="text-[9px] px-1 py-px rounded bg-secondary text-muted-foreground flex-shrink-0 items-center gap-0.5 hidden sm:flex"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
               <Save size={8} />auto
             </span>
           </div>
 
-          {/* Right: controls */}
+          {/* Right */}
           <div className="flex items-center gap-0.5">
             {/* View toggle */}
             <div className="flex items-center p-px rounded-md bg-secondary">
               {([
                 { mode: "editor" as ViewMode, icon: FileText, label: "Editor" },
-                { mode: "split" as ViewMode, icon: Columns, label: "Split" },
+                { mode: "split" as ViewMode, icon: Columns, label: "Split", hideOnMobile: true },
                 { mode: "preview" as ViewMode, icon: Eye, label: "Preview" },
-              ]).map(({ mode, icon: Icon, label }) => (
+              ]).map(({ mode, icon: Icon, label, hideOnMobile }) => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
@@ -160,7 +213,7 @@ const MarkdownEditor = () => {
                     viewMode === mode
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  } ${hideOnMobile ? "hidden sm:flex" : "flex"}`}
                   title={label}
                   style={{ fontFamily: "'Inter', sans-serif" }}
                 >
@@ -170,33 +223,45 @@ const MarkdownEditor = () => {
               ))}
             </div>
 
-            {/* Toolbar toggle - in header */}
-            <button
+            {/* Toolbar toggle */}
+            <HeaderButton
               onClick={() => setToolbarVisible(!toolbarVisible)}
-              className={`toolbar-btn ${toolbarVisible ? "active" : ""}`}
-              title={toolbarVisible ? "Sembunyikan toolbar" : "Tampilkan toolbar"}
+              active={toolbarVisible}
+              title={toolbarVisible ? "Hide Toolbar" : "Show Toolbar"}
             >
               <Wrench size={14} />
-            </button>
+            </HeaderButton>
 
-            <button
-              onClick={() => setOutlineOpen(!outlineOpen)}
-              className={`toolbar-btn ${outlineOpen ? "active" : ""}`}
-              title="Outline"
+            {/* Outline - hidden on mobile */}
+            <span className="hidden md:inline-flex">
+              <HeaderButton
+                onClick={() => setOutlineOpen(!outlineOpen)}
+                active={outlineOpen}
+                title="Outline"
+              >
+                <ListTree size={14} />
+              </HeaderButton>
+            </span>
+
+            {/* Dark mode toggle */}
+            <HeaderButton
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              title={theme === "dark" ? "Light Mode" : "Dark Mode"}
             >
-              <ListTree size={14} />
-            </button>
+              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+            </HeaderButton>
 
-            <button
+            {/* Focus mode */}
+            <HeaderButton
               onClick={() => {
                 setFocusMode(!focusMode);
                 if (!focusMode) { setSidebarOpen(false); setOutlineOpen(false); }
               }}
-              className={`toolbar-btn ${focusMode ? "active" : ""}`}
-              title="Focus mode"
+              active={focusMode}
+              title="Focus Mode"
             >
               {focusMode ? <Minimize size={14} /> : <Maximize size={14} />}
-            </button>
+            </HeaderButton>
           </div>
         </header>
 
@@ -234,7 +299,7 @@ const MarkdownEditor = () => {
           </div>
 
           {/* Outline */}
-          {!focusMode && (
+          {!focusMode && !isMobile && (
             <DocumentOutline content={content} isOpen={outlineOpen} onClose={() => setOutlineOpen(false)} />
           )}
         </div>
@@ -244,14 +309,14 @@ const MarkdownEditor = () => {
           className="flex items-center justify-between px-3 py-1 border-t border-border text-[10px] text-muted-foreground flex-shrink-0"
           style={{ fontFamily: "'JetBrains Mono', monospace" }}
         >
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <span>{wordCount} kata</span>
-            <span>{charCount} chr</span>
-            <span>~{readTime}m baca</span>
+            <span className="hidden sm:inline">{charCount} chr</span>
+            <span>~{readTime}m</span>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <span>GFM</span>
-            <span>UTF-8</span>
+            <span className="hidden sm:inline">UTF-8</span>
           </div>
         </footer>
       </div>
