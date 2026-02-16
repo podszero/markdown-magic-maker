@@ -10,9 +10,10 @@ interface DocumentOutlineProps {
   content: string;
   isOpen: boolean;
   onClose: () => void;
+  onHeadingClick?: (id: string) => void;
 }
 
-const DocumentOutline = ({ content, isOpen, onClose }: DocumentOutlineProps) => {
+const DocumentOutline = ({ content, isOpen, onClose, onHeadingClick }: DocumentOutlineProps) => {
   const headings = useMemo<OutlineItem[]>(() => {
     return content
       .split("\n")
@@ -20,14 +21,19 @@ const DocumentOutline = ({ content, isOpen, onClose }: DocumentOutlineProps) => 
       .map((line, i) => {
         const match = line.match(/^(#{1,6})\s+(.+)/);
         if (!match) return null;
+        const text = match[2].replace(/[*_`~\[\]()#]/g, "").trim();
         return {
           level: match[1].length,
-          text: match[2].replace(/[*_`~\[\]()#]/g, "").trim(),
-          id: `heading-${i}`,
+          text,
+          id: `heading-${text.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "")}-${i}`,
         };
       })
       .filter(Boolean) as OutlineItem[];
   }, [content]);
+
+  const handleClick = (h: OutlineItem) => {
+    onHeadingClick?.(h.id);
+  };
 
   return (
     <aside
@@ -54,6 +60,7 @@ const DocumentOutline = ({ content, isOpen, onClose }: DocumentOutlineProps) => 
             headings.map((h) => (
               <button
                 key={h.id}
+                onClick={() => handleClick(h)}
                 className="w-full text-left py-1 hover:bg-accent/50 transition-colors truncate block"
                 style={{
                   paddingLeft: `${(h.level - 1) * 10 + 12}px`,

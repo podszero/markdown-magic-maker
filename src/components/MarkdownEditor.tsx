@@ -5,6 +5,8 @@ import FileSidebar from "./FileSidebar";
 import DocumentOutline from "./DocumentOutline";
 import DropOverlay from "./DropOverlay";
 import MarkdownPreview from "./MarkdownPreview";
+import EditorWithLineNumbers from "./EditorWithLineNumbers";
+import EditorSettings from "./EditorSettings";
 import { useMarkdownFiles } from "@/hooks/useMarkdownFiles";
 import {
   FileText,
@@ -31,19 +33,9 @@ type ViewMode = "split" | "editor" | "preview";
 
 const MarkdownEditor = () => {
   const {
-    files,
-    activeFile,
-    activeFileId,
-    setActiveFileId,
-    createFile,
-    updateFileContent,
-    renameFile,
-    deleteFile,
-    duplicateFile,
-    exportFile,
-    importFile,
-    importFromDrop,
-    searchFiles,
+    files, activeFile, activeFileId, setActiveFileId,
+    createFile, updateFileContent, renameFile, deleteFile,
+    duplicateFile, exportFile, importFile, importFromDrop, searchFiles,
   } = useMarkdownFiles();
 
   const { theme, setTheme } = useTheme();
@@ -53,24 +45,22 @@ const MarkdownEditor = () => {
   const [focusMode, setFocusMode] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [showLineNumbers, setShowLineNumbers] = useState(false);
+  const [syncScroll, setSyncScroll] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const isScrollSyncing = useRef(false);
 
   const content = activeFile?.content || "";
 
   // Drag & drop
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      importFromDrop(acceptedFiles);
-    },
+    (acceptedFiles: File[]) => importFromDrop(acceptedFiles),
     [importFromDrop]
   );
-
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      "text/markdown": [".md", ".markdown"],
-      "text/plain": [".txt"],
-    },
+    accept: { "text/markdown": [".md", ".markdown"], "text/plain": [".txt"] },
     noClick: true,
     noKeyboard: true,
   });
@@ -101,6 +91,50 @@ const MarkdownEditor = () => {
     [content, handleContentChange]
   );
 
+  // Sync scroll
+  const handleEditorScroll = useCallback(
+    (e: React.UIEvent<HTMLTextAreaElement>) => {
+      if (!syncScroll || viewMode !== "split" || isScrollSyncing.current) return;
+      isScrollSyncing.current = true;
+      const el = e.currentTarget;
+      const ratio = el.scrollTop / (el.scrollHeight - el.clientHeight || 1);
+      if (previewRef.current) {
+        const preview = previewRef.current;
+        preview.scrollTop = ratio * (preview.scrollHeight - preview.clientHeight);
+      }
+      requestAnimationFrame(() => { isScrollSyncing.current = false; });
+    },
+    [syncScroll, viewMode]
+  );
+
+  const handlePreviewScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      if (!syncScroll || viewMode !== "split" || isScrollSyncing.current) return;
+      isScrollSyncing.current = true;
+      const el = e.currentTarget;
+      const ratio = el.scrollTop / (el.scrollHeight - el.clientHeight || 1);
+      if (textareaRef.current) {
+        textareaRef.current.scrollTop = ratio * (textareaRef.current.scrollHeight - textareaRef.current.clientHeight);
+      }
+      requestAnimationFrame(() => { isScrollSyncing.current = false; });
+    },
+    [syncScroll, viewMode]
+  );
+
+  // Outline heading click
+  const handleOutlineHeadingClick = useCallback(
+    (id: string) => {
+      if (previewRef.current) {
+        const el = previewRef.current.querySelector(`#${CSS.escape(id)}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+      }
+    },
+    []
+  );
+
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -124,12 +158,9 @@ const MarkdownEditor = () => {
       const tablet = window.innerWidth < 1024;
       setIsMobile(mobile);
       if (mobile) {
-        setSidebarOpen(false);
-        setOutlineOpen(false);
-        setViewMode("editor");
+        setSidebarOpen(false); setOutlineOpen(false); setViewMode("editor");
       } else if (tablet) {
-        setSidebarOpen(false);
-        setViewMode("split");
+        setSidebarOpen(false); setViewMode("split");
       }
     };
     check();
@@ -142,28 +173,15 @@ const MarkdownEditor = () => {
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
   const HeaderButton = ({
-    onClick,
-    active,
-    title,
-    children,
-  }: {
-    onClick: () => void;
-    active?: boolean;
-    title: string;
-    children: React.ReactNode;
-  }) => (
+    onClick, active, title, children,
+  }: { onClick: () => void; active?: boolean; title: string; children: React.ReactNode }) => (
     <Tooltip>
       <TooltipTrigger asChild>
-        <button
-          onClick={onClick}
-          className={`toolbar-btn ${active ? "active" : ""}`}
-        >
+        <button onClick={onClick} className={`toolbar-btn ${active ? "active" : ""}`}>
           {children}
         </button>
       </TooltipTrigger>
-      <TooltipContent side="bottom" className="text-[11px] py-1 px-2">
-        {title}
-      </TooltipContent>
+      <TooltipContent side="bottom" className="text-[11px] py-1 px-2">{title}</TooltipContent>
     </Tooltip>
   );
 
@@ -172,57 +190,35 @@ const MarkdownEditor = () => {
       <input {...getInputProps()} />
       <DropOverlay isDragActive={isDragActive} />
 
-      {/* Sidebar */}
       {!focusMode && (
         <FileSidebar
-          files={files}
-          activeFileId={activeFileId}
-          onSelectFile={setActiveFileId}
-          onCreateFile={() => createFile()}
-          onDeleteFile={deleteFile}
-          onRenameFile={renameFile}
-          onDuplicateFile={duplicateFile}
-          onExportFile={exportFile}
-          onImportFile={importFile}
-          searchFiles={searchFiles}
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
+          files={files} activeFileId={activeFileId} onSelectFile={setActiveFileId}
+          onCreateFile={() => createFile()} onDeleteFile={deleteFile}
+          onRenameFile={renameFile} onDuplicateFile={duplicateFile}
+          onExportFile={exportFile} onImportFile={importFile}
+          searchFiles={searchFiles} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header className="flex items-center justify-between px-2 md:px-3 py-1.5 border-b border-border flex-shrink-0 gap-1">
-          {/* Left */}
           <div className="flex items-center gap-1 min-w-0">
             {!focusMode && (
-              <HeaderButton
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                active={sidebarOpen}
-                title="Toggle Files"
-              >
+              <HeaderButton onClick={() => setSidebarOpen(!sidebarOpen)} active={sidebarOpen} title="Toggle Files">
                 <PanelLeft size={isMobile ? 18 : 16} />
               </HeaderButton>
             )}
             <FileText size={14} className="text-primary flex-shrink-0 hidden sm:block" />
-            <span
-              className="text-xs font-medium text-foreground truncate max-w-[120px] sm:max-w-[200px]"
-              style={{ fontFamily: "'Inter', sans-serif" }}
-            >
+            <span className="text-xs font-medium text-foreground truncate max-w-[120px] sm:max-w-[200px]" style={{ fontFamily: "'Inter', sans-serif" }}>
               {activeFile?.title || "Untitled"}
             </span>
-            <span
-              className="text-[9px] px-1 py-px rounded bg-secondary text-muted-foreground flex-shrink-0 items-center gap-0.5 hidden sm:flex"
-              style={{ fontFamily: "'JetBrains Mono', monospace" }}
-            >
+            <span className="text-[9px] px-1 py-px rounded bg-secondary text-muted-foreground flex-shrink-0 items-center gap-0.5 hidden sm:flex" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
               <Save size={8} />auto
             </span>
           </div>
 
-          {/* Right */}
           <div className="flex items-center gap-0.5">
-            {/* View toggle */}
             <div className="flex items-center p-px rounded-md bg-secondary">
               {([
                 { mode: "editor" as ViewMode, icon: FileText, label: "Editor" },
@@ -233,9 +229,7 @@ const MarkdownEditor = () => {
                   key={mode}
                   onClick={() => setViewMode(mode)}
                   className={`flex items-center gap-1 px-1.5 py-1 rounded text-[11px] font-medium transition-all duration-200 ${
-                    viewMode === mode
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                    viewMode === mode ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   } ${hideOnMobile ? "hidden sm:flex" : "flex"}`}
                   title={label}
                   style={{ fontFamily: "'Inter', sans-serif" }}
@@ -246,35 +240,28 @@ const MarkdownEditor = () => {
               ))}
             </div>
 
-            {/* Toolbar toggle */}
-            <HeaderButton
-              onClick={() => setToolbarVisible(!toolbarVisible)}
-              active={toolbarVisible}
-              title={toolbarVisible ? "Hide Toolbar" : "Show Toolbar"}
-            >
+            <HeaderButton onClick={() => setToolbarVisible(!toolbarVisible)} active={toolbarVisible} title={toolbarVisible ? "Hide Toolbar" : "Show Toolbar"}>
               <Wrench size={14} />
             </HeaderButton>
 
-            {/* Outline - hidden on mobile */}
             <span className="hidden md:inline-flex">
-              <HeaderButton
-                onClick={() => setOutlineOpen(!outlineOpen)}
-                active={outlineOpen}
-                title="Outline"
-              >
+              <HeaderButton onClick={() => setOutlineOpen(!outlineOpen)} active={outlineOpen} title="Outline">
                 <ListTree size={14} />
               </HeaderButton>
             </span>
 
-            {/* Dark mode toggle */}
-            <HeaderButton
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              title={theme === "dark" ? "Light Mode" : "Dark Mode"}
-            >
+            {/* Settings */}
+            <EditorSettings
+              showLineNumbers={showLineNumbers}
+              onToggleLineNumbers={setShowLineNumbers}
+              syncScroll={syncScroll}
+              onToggleSyncScroll={setSyncScroll}
+            />
+
+            <HeaderButton onClick={() => setTheme(theme === "dark" ? "light" : "dark")} title={theme === "dark" ? "Light Mode" : "Dark Mode"}>
               {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
             </HeaderButton>
 
-            {/* Focus mode */}
             <HeaderButton
               onClick={() => {
                 setFocusMode(!focusMode);
@@ -291,39 +278,37 @@ const MarkdownEditor = () => {
         {/* Content */}
         <div className="flex-1 flex overflow-hidden">
           <div className="flex-1 flex min-w-0">
-            {/* Editor panel */}
             {viewMode !== "preview" && (
               <div className={`flex flex-col ${viewMode === "split" ? "w-1/2 border-r border-border" : "w-full"}`}>
                 <MarkdownToolbar onInsert={handleInsert} isVisible={toolbarVisible} />
-                <textarea
+                <EditorWithLineNumbers
                   ref={textareaRef}
                   value={content}
-                  onChange={(e) => handleContentChange(e.target.value)}
-                  className="editor-textarea flex-1 custom-scroll"
+                  onChange={handleContentChange}
+                  showLineNumbers={showLineNumbers}
                   placeholder="Tulis Markdown di sini... (atau drag & drop file .md)"
-                  spellCheck={false}
+                  onScroll={handleEditorScroll}
                 />
               </div>
             )}
 
-            {/* Preview panel */}
             {viewMode !== "editor" && (
               <div
                 className={`flex flex-col ${viewMode === "split" ? "w-1/2" : "w-full"}`}
                 style={{ background: "hsl(var(--preview-bg))" }}
               >
-                <div className="flex-1 overflow-y-auto custom-scroll p-4 md:p-8">
-                  <div className="max-w-3xl mx-auto">
-                    <MarkdownPreview content={content} />
-                  </div>
-                </div>
+                <MarkdownPreview ref={previewRef} content={content} onScroll={handlePreviewScroll} />
               </div>
             )}
           </div>
 
-          {/* Outline */}
           {!focusMode && !isMobile && (
-            <DocumentOutline content={content} isOpen={outlineOpen} onClose={() => setOutlineOpen(false)} />
+            <DocumentOutline
+              content={content}
+              isOpen={outlineOpen}
+              onClose={() => setOutlineOpen(false)}
+              onHeadingClick={handleOutlineHeadingClick}
+            />
           )}
         </div>
 
