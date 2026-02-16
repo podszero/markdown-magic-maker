@@ -11,20 +11,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useEditorStore } from "@/stores/useEditorStore";
 
-interface EditorSettingsProps {
-  showLineNumbers: boolean;
-  onToggleLineNumbers: (v: boolean) => void;
-  syncScroll: boolean;
-  onToggleSyncScroll: (v: boolean) => void;
-}
+const EditorSettings = () => {
+  const showLineNumbers = useEditorStore((s) => s.showLineNumbers);
+  const syncScroll = useEditorStore((s) => s.syncScroll);
+  const setShowLineNumbers = useEditorStore((s) => s.setShowLineNumbers);
+  const setSyncScroll = useEditorStore((s) => s.setSyncScroll);
 
-const EditorSettings = ({
-  showLineNumbers,
-  onToggleLineNumbers,
-  syncScroll,
-  onToggleSyncScroll,
-}: EditorSettingsProps) => {
   return (
     <Popover>
       <Tooltip>
@@ -53,7 +47,7 @@ const EditorSettings = ({
           <Switch
             id="line-numbers"
             checked={showLineNumbers}
-            onCheckedChange={onToggleLineNumbers}
+            onCheckedChange={setShowLineNumbers}
             className="scale-75"
           />
         </div>
@@ -64,7 +58,7 @@ const EditorSettings = ({
           <Switch
             id="sync-scroll"
             checked={syncScroll}
-            onCheckedChange={onToggleSyncScroll}
+            onCheckedChange={setSyncScroll}
             className="scale-75"
           />
         </div>

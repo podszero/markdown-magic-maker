@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { format } from "timeago.js";
 
 interface OutlineItem {
   level: number;
@@ -13,6 +14,9 @@ interface DocumentOutlineProps {
   onHeadingClick?: (id: string) => void;
 }
 
+const slugify = (text: string) =>
+  text.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
+
 const DocumentOutline = ({ content, isOpen, onClose, onHeadingClick }: DocumentOutlineProps) => {
   const headings = useMemo<OutlineItem[]>(() => {
     return content
@@ -25,15 +29,11 @@ const DocumentOutline = ({ content, isOpen, onClose, onHeadingClick }: DocumentO
         return {
           level: match[1].length,
           text,
-          id: `heading-${text.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "")}-${i}`,
+          id: `heading-${slugify(text)}-${i}`,
         };
       })
       .filter(Boolean) as OutlineItem[];
   }, [content]);
-
-  const handleClick = (h: OutlineItem) => {
-    onHeadingClick?.(h.id);
-  };
 
   return (
     <aside
@@ -60,8 +60,8 @@ const DocumentOutline = ({ content, isOpen, onClose, onHeadingClick }: DocumentO
             headings.map((h) => (
               <button
                 key={h.id}
-                onClick={() => handleClick(h)}
-                className="w-full text-left py-1 hover:bg-accent/50 transition-colors truncate block"
+                onClick={() => onHeadingClick?.(h.id)}
+                className="w-full text-left py-1.5 hover:bg-accent/50 transition-colors truncate block group"
                 style={{
                   paddingLeft: `${(h.level - 1) * 10 + 12}px`,
                   paddingRight: "12px",
@@ -71,7 +71,7 @@ const DocumentOutline = ({ content, isOpen, onClose, onHeadingClick }: DocumentO
                   fontFamily: "'Inter', sans-serif",
                 }}
               >
-                {h.text}
+                <span className="group-hover:text-primary transition-colors">{h.text}</span>
               </button>
             ))
           )}
