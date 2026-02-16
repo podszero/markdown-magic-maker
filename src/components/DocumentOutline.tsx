@@ -14,8 +14,8 @@ interface DocumentOutlineProps {
 
 const DocumentOutline = ({ content, isOpen, onClose }: DocumentOutlineProps) => {
   const headings = useMemo<OutlineItem[]>(() => {
-    const lines = content.split("\n");
-    return lines
+    return content
+      .split("\n")
       .filter((line) => /^#{1,6}\s/.test(line))
       .map((line, i) => {
         const match = line.match(/^(#{1,6})\s+(.+)/);
@@ -29,36 +29,38 @@ const DocumentOutline = ({ content, isOpen, onClose }: DocumentOutlineProps) => 
       .filter(Boolean) as OutlineItem[];
   }, [content]);
 
-  if (!isOpen) return null;
-
   return (
-    <>
-      <div className="fixed inset-0 bg-black/20 z-40 md:hidden" onClick={onClose} />
-      <aside
-        className="fixed md:relative right-0 top-0 h-full z-50 w-60 border-l border-border overflow-y-auto flex-shrink-0"
-        style={{ background: "hsl(var(--card))" }}
-      >
-        <div className="px-4 py-3 border-b border-border">
-          <h3
-            className="text-sm font-semibold text-foreground tracking-wide uppercase"
+    <aside
+      className="sidebar-panel relative top-0 right-0 h-full border-l border-border overflow-hidden flex-shrink-0"
+      style={{
+        background: "hsl(var(--card))",
+        width: isOpen ? "200px" : "0px",
+        opacity: isOpen ? 1 : 0,
+      }}
+    >
+      <div style={{ minWidth: "200px" }}>
+        <div className="px-3 py-2 border-b border-border">
+          <span
+            className="text-[11px] font-semibold text-muted-foreground tracking-widest uppercase"
             style={{ fontFamily: "'Inter', sans-serif" }}
           >
             Outline
-          </h3>
+          </span>
         </div>
-        <div className="py-2">
+        <div className="py-1 overflow-y-auto custom-scroll" style={{ maxHeight: "calc(100vh - 120px)" }}>
           {headings.length === 0 ? (
-            <p className="px-4 py-4 text-xs text-muted-foreground">Tidak ada heading ditemukan</p>
+            <p className="px-3 py-4 text-[10px] text-muted-foreground">Tidak ada heading</p>
           ) : (
             headings.map((h) => (
               <button
                 key={h.id}
-                className="w-full text-left px-4 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors truncate"
+                className="w-full text-left py-1 hover:bg-accent/50 transition-colors truncate block"
                 style={{
-                  paddingLeft: `${(h.level - 1) * 12 + 16}px`,
-                  color: h.level === 1 ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                  paddingLeft: `${(h.level - 1) * 10 + 12}px`,
+                  paddingRight: "12px",
+                  color: h.level <= 2 ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                   fontWeight: h.level <= 2 ? 600 : 400,
-                  fontSize: h.level === 1 ? "0.875rem" : "0.8rem",
+                  fontSize: h.level === 1 ? "0.75rem" : "0.7rem",
                   fontFamily: "'Inter', sans-serif",
                 }}
               >
@@ -67,8 +69,8 @@ const DocumentOutline = ({ content, isOpen, onClose }: DocumentOutlineProps) => 
             ))
           )}
         </div>
-      </aside>
-    </>
+      </div>
+    </aside>
   );
 };
 

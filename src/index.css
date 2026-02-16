@@ -8,32 +8,23 @@
   :root {
     --background: 40 20% 98%;
     --foreground: 30 10% 12%;
-
     --card: 40 25% 96%;
     --card-foreground: 30 10% 12%;
-
     --popover: 40 20% 98%;
     --popover-foreground: 30 10% 12%;
-
     --primary: 25 80% 52%;
     --primary-foreground: 40 20% 98%;
-
     --secondary: 40 15% 92%;
     --secondary-foreground: 30 10% 25%;
-
     --muted: 40 12% 90%;
     --muted-foreground: 30 8% 50%;
-
     --accent: 25 60% 94%;
     --accent-foreground: 25 80% 35%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 35 15% 88%;
     --input: 35 15% 88%;
     --ring: 25 80% 52%;
-
     --radius: 0.5rem;
 
     --editor-bg: 40 15% 97%;
@@ -55,28 +46,20 @@
   .dark {
     --background: 30 10% 8%;
     --foreground: 40 15% 90%;
-
     --card: 30 10% 10%;
     --card-foreground: 40 15% 90%;
-
     --popover: 30 10% 8%;
     --popover-foreground: 40 15% 90%;
-
     --primary: 25 80% 55%;
     --primary-foreground: 30 10% 8%;
-
     --secondary: 30 8% 16%;
     --secondary-foreground: 40 15% 85%;
-
     --muted: 30 8% 18%;
     --muted-foreground: 40 10% 55%;
-
     --accent: 25 30% 18%;
     --accent-foreground: 25 60% 70%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 30 8% 20%;
     --input: 30 8% 20%;
     --ring: 25 80% 55%;
@@ -102,7 +85,6 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground font-sans;
   }
@@ -110,83 +92,79 @@
 
 @layer components {
   .editor-textarea {
-    @apply w-full h-full resize-none border-none outline-none p-6;
+    @apply w-full h-full resize-none border-none outline-none p-5;
     background: hsl(var(--editor-bg));
     color: hsl(var(--editor-foreground));
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.9rem;
-    line-height: 1.7;
+    font-size: 0.85rem;
+    line-height: 1.75;
     tab-size: 2;
+  }
+
+  .editor-textarea::placeholder {
+    color: hsl(var(--muted-foreground));
+    opacity: 0.6;
   }
 
   .markdown-preview {
     font-family: 'Merriweather', serif;
     color: hsl(var(--foreground));
     line-height: 1.8;
+    font-size: 0.95rem;
   }
 
   .markdown-preview h1 {
-    @apply text-3xl font-bold mt-8 mb-4;
+    @apply text-3xl font-bold mt-8 mb-4 pb-2 border-b;
     font-family: 'Inter', sans-serif;
-    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
   }
-
   .markdown-preview h2 {
-    @apply text-2xl font-bold mt-6 mb-3;
+    @apply text-2xl font-bold mt-6 mb-3 pb-1.5 border-b;
     font-family: 'Inter', sans-serif;
-    color: hsl(var(--foreground));
+    border-color: hsl(var(--border) / 0.5);
   }
-
   .markdown-preview h3 {
     @apply text-xl font-semibold mt-5 mb-2;
     font-family: 'Inter', sans-serif;
   }
-
-  .markdown-preview p {
-    @apply mb-4 text-base;
+  .markdown-preview h4 {
+    @apply text-lg font-semibold mt-4 mb-2;
+    font-family: 'Inter', sans-serif;
   }
-
-  .markdown-preview ul, .markdown-preview ol {
-    @apply mb-4 pl-6;
-  }
-
-  .markdown-preview ul {
-    @apply list-disc;
-  }
-
-  .markdown-preview ol {
-    @apply list-decimal;
-  }
-
-  .markdown-preview li {
-    @apply mb-1;
-  }
+  .markdown-preview p { @apply mb-4 text-base leading-relaxed; }
+  .markdown-preview ul, .markdown-preview ol { @apply mb-4 pl-6; }
+  .markdown-preview ul { @apply list-disc; }
+  .markdown-preview ol { @apply list-decimal; }
+  .markdown-preview li { @apply mb-1.5; }
+  .markdown-preview li > ul, .markdown-preview li > ol { @apply mt-1; }
 
   .markdown-preview blockquote {
-    @apply border-l-4 pl-4 italic my-4;
+    @apply border-l-4 pl-4 italic my-4 py-1;
     border-color: hsl(var(--primary));
     color: hsl(var(--muted-foreground));
+    background: hsl(var(--muted) / 0.3);
+    @apply rounded-r-md pr-3;
   }
 
   .markdown-preview code {
-    @apply px-1.5 py-0.5 rounded text-sm;
+    @apply px-1.5 py-0.5 rounded text-[0.85em];
     background: hsl(var(--muted));
     font-family: 'JetBrains Mono', monospace;
     color: hsl(var(--accent-foreground));
   }
 
   .markdown-preview pre {
-    @apply rounded-lg p-4 my-4 overflow-x-auto;
+    @apply rounded-lg p-4 my-4 overflow-x-auto text-sm;
     background: hsl(var(--muted));
   }
-
   .markdown-preview pre code {
     @apply p-0 bg-transparent;
+    font-size: 0.85rem;
   }
 
   .markdown-preview a {
     color: hsl(var(--primary));
-    @apply underline underline-offset-2;
+    @apply underline underline-offset-2 decoration-primary/40 hover:decoration-primary transition-colors;
   }
 
   .markdown-preview hr {
@@ -195,32 +173,58 @@
   }
 
   .markdown-preview table {
-    @apply w-full my-4 border-collapse;
+    @apply w-full my-4 border-collapse text-sm;
   }
-
   .markdown-preview th, .markdown-preview td {
-    @apply border px-3 py-2 text-sm text-left;
+    @apply border px-3 py-2 text-left;
     border-color: hsl(var(--border));
   }
-
   .markdown-preview th {
     background: hsl(var(--muted));
     font-family: 'Inter', sans-serif;
-    @apply font-semibold;
+    @apply font-semibold text-xs uppercase tracking-wider;
   }
-
   .markdown-preview img {
     @apply rounded-lg max-w-full my-4;
   }
 
-  .toolbar-btn {
-    @apply px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors duration-150;
-    color: hsl(var(--muted-foreground));
-    font-family: 'JetBrains Mono', monospace;
+  /* Input task lists */
+  .markdown-preview input[type="checkbox"] {
+    @apply mr-2 accent-primary;
   }
 
+  .toolbar-btn {
+    @apply p-1.5 rounded transition-all duration-150 flex-shrink-0;
+    color: hsl(var(--muted-foreground));
+  }
   .toolbar-btn:hover {
     background: hsl(var(--accent));
     color: hsl(var(--accent-foreground));
+  }
+  .toolbar-btn.active {
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+  }
+
+  /* Smooth sidebar transition */
+  .sidebar-panel {
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                opacity 0.2s ease,
+                transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Scrollbar styling */
+  .custom-scroll::-webkit-scrollbar {
+    width: 5px;
+  }
+  .custom-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scroll::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 10px;
+  }
+  .custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
   }
 }
