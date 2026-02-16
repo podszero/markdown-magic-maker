@@ -6,6 +6,7 @@ import FileSidebar from "./FileSidebar";
 import DocumentOutline from "./DocumentOutline";
 import DropOverlay from "./DropOverlay";
 import MarkdownPreview from "./MarkdownPreview";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./ui/resizable";
 import EditorWithLineNumbers from "./EditorWithLineNumbers";
 import EditorSettings from "./EditorSettings";
 import { useMarkdownFiles } from "@/hooks/useMarkdownFiles";
@@ -277,30 +278,50 @@ const MarkdownEditor = () => {
 
         {/* Content */}
         <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 flex min-w-0">
-            {viewMode !== "preview" && (
-              <div className={`flex flex-col ${viewMode === "split" ? "w-1/2 border-r border-border" : "w-full"}`}>
-                <MarkdownToolbar onInsert={handleInsert} isVisible={toolbarVisible} />
-                <EditorWithLineNumbers
-                  ref={textareaRef}
-                  value={content}
-                  onChange={handleContentChange}
-                  showLineNumbers={showLineNumbers}
-                  placeholder="Tulis Markdown di sini... (atau drag & drop file .md)"
-                  onScroll={handleEditorScroll}
-                />
-              </div>
-            )}
-
-            {viewMode !== "editor" && (
-              <div
-                className={`flex flex-col ${viewMode === "split" ? "w-1/2" : "w-full"}`}
-                style={{ background: "hsl(var(--preview-bg))" }}
-              >
-                <MarkdownPreview ref={previewRef} content={content} onScroll={handlePreviewScroll} />
-              </div>
-            )}
-          </div>
+          {viewMode === "split" ? (
+            <ResizablePanelGroup direction="horizontal" className="flex-1">
+              <ResizablePanel defaultSize={50} minSize={25}>
+                <div className="flex flex-col h-full">
+                  <MarkdownToolbar onInsert={handleInsert} isVisible={toolbarVisible} />
+                  <EditorWithLineNumbers
+                    ref={textareaRef}
+                    value={content}
+                    onChange={handleContentChange}
+                    showLineNumbers={showLineNumbers}
+                    placeholder="Tulis Markdown di sini... (atau drag & drop file .md)"
+                    onScroll={handleEditorScroll}
+                  />
+                </div>
+              </ResizablePanel>
+              <ResizableHandle withHandle />
+              <ResizablePanel defaultSize={50} minSize={25}>
+                <div className="flex flex-col h-full" style={{ background: "hsl(var(--preview-bg))" }}>
+                  <MarkdownPreview ref={previewRef} content={content} onScroll={handlePreviewScroll} />
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          ) : (
+            <div className="flex-1 flex min-w-0">
+              {viewMode === "editor" && (
+                <div className="flex flex-col w-full">
+                  <MarkdownToolbar onInsert={handleInsert} isVisible={toolbarVisible} />
+                  <EditorWithLineNumbers
+                    ref={textareaRef}
+                    value={content}
+                    onChange={handleContentChange}
+                    showLineNumbers={showLineNumbers}
+                    placeholder="Tulis Markdown di sini... (atau drag & drop file .md)"
+                    onScroll={handleEditorScroll}
+                  />
+                </div>
+              )}
+              {viewMode === "preview" && (
+                <div className="flex flex-col w-full" style={{ background: "hsl(var(--preview-bg))" }}>
+                  <MarkdownPreview ref={previewRef} content={content} onScroll={handlePreviewScroll} />
+                </div>
+              )}
+            </div>
+          )}
 
           {!focusMode && !isMobile && (
             <DocumentOutline
