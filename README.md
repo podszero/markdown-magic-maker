@@ -1,73 +1,137 @@
-# Welcome to your Lovable project
+# ✍️ Markdown Editor
 
-## Project info
+Editor Markdown modern berbasis web dengan fitur lengkap, dibangun menggunakan React, TypeScript, dan Tailwind CSS.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+![Markdown Editor](https://img.shields.io/badge/React-18-blue?logo=react) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript) ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-3-blue?logo=tailwindcss) ![Vite](https://img.shields.io/badge/Vite-5-purple?logo=vite)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🚀 Fitur Utama
 
-**Use Lovable**
+### 📝 Editor
+- **Split View** — Mode editor, preview, atau split dengan panel yang bisa di-resize (drag handle)
+- **Line Numbers** — Nomor baris yang bisa diaktifkan/dinonaktifkan melalui Settings
+- **Synchronized Scroll** — Scroll editor & preview tersinkronisasi otomatis di split mode
+- **Focus Mode** — Mode fokus tanpa distraksi (sembunyikan sidebar & outline)
+- **Auto Save** — Perubahan disimpan otomatis ke localStorage
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### 🎨 Rendering & Preview
+- **GitHub Flavored Markdown (GFM)** — Tabel, checklist, strikethrough, dan lainnya
+- **Syntax Highlighting** — Highlight otomatis untuk 180+ bahasa pemrograman
+- **LaTeX Math (KaTeX)** — Rumus matematika inline (`$...$`) dan block (`$$...$$`)
+- **Mermaid Diagrams** — Flowchart, sequence diagram, class diagram, dan lainnya
+- **Error Boundary** — Preview yang aman dengan fallback jika terjadi error rendering
 
-Changes made via Lovable will be committed automatically to this repo.
+### 📁 File Manager
+- **Multi-file** — Buat, buka, rename, duplikat, dan hapus file markdown
+- **Search** — Cari file berdasarkan judul atau isi konten
+- **Import / Export** — Import file `.md` / `.txt` dari disk, export file ke `.md`
+- **Drag & Drop** — Seret file `.md` atau `.txt` langsung ke editor untuk import
 
-**Use your preferred IDE**
+### 🧭 Navigasi & Outline
+- **Document Outline** — Panel outline otomatis dari heading dokumen
+- **Clickable Headings** — Klik heading di outline untuk scroll ke posisi yang tepat
+- **Keyboard Shortcuts** — Shortcut untuk bold, italic, save, dan new file
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### ⚙️ Pengaturan
+- **Dark / Light Mode** — Toggle tema gelap dan terang
+- **Line Numbers Toggle** — Aktifkan/nonaktifkan nomor baris
+- **Sync Scroll Toggle** — Aktifkan/nonaktifkan sinkronisasi scroll
+- **Responsive** — Tampilan optimal di desktop dan mobile
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+## 🛠️ Tech Stack
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+| Teknologi | Kegunaan |
+| --- | --- |
+| [React 18](https://react.dev) | UI library |
+| [TypeScript](https://typescriptlang.org) | Type safety |
+| [Vite](https://vitejs.dev) | Build tool & dev server |
+| [Tailwind CSS](https://tailwindcss.com) | Utility-first styling |
+| [shadcn/ui](https://ui.shadcn.com) | Komponen UI |
+| [Zustand](https://zustand-demo.pmnd.rs) | State management |
+| [react-markdown](https://github.com/remarkjs/react-markdown) | Markdown rendering |
+| [remark-gfm](https://github.com/remarkjs/remark-gfm) | GitHub Flavored Markdown |
+| [rehype-highlight](https://github.com/rehypejs/rehype-highlight) | Syntax highlighting |
+| [KaTeX](https://katex.org) | Rendering rumus matematika |
+| [Mermaid](https://mermaid.js.org) | Rendering diagram |
+| [hotkeys-js](https://github.com/jaywcjlove/hotkeys) | Keyboard shortcuts |
+| [react-dropzone](https://react-dropzone.js.org) | Drag & drop file |
+| [react-resizable-panels](https://github.com/bvaughn/react-resizable-panels) | Resizable split view |
+| [react-error-boundary](https://github.com/bvaughn/react-error-boundary) | Error handling |
+| [react-virtuoso](https://virtuoso.dev) | Virtualized list rendering |
+| [timeago.js](https://timeago.org) | Relative timestamp |
+| [Sonner](https://sonner.emilkowal.dev) | Toast notifications |
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Aksi |
+| --- | --- |
+| `Ctrl/⌘ + B` | Bold |
+| `Ctrl/⌘ + I` | Italic |
+| `Ctrl/⌘ + S` | Save (notifikasi) |
+| `Ctrl/⌘ + N` | File baru |
+
+---
+
+## 📦 Instalasi & Pengembangan
+
+```bash
+# Clone repository
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Jalankan development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Aplikasi akan berjalan di `http://localhost:5173`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## 📂 Struktur Proyek
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```
+src/
+├── components/
+│   ├── MarkdownEditor.tsx      # Komponen utama editor
+│   ├── MarkdownPreview.tsx     # Preview markdown dengan rendering
+│   ├── MarkdownToolbar.tsx     # Toolbar formatting
+│   ├── EditorWithLineNumbers.tsx # Editor textarea dengan line numbers
+│   ├── EditorSettings.tsx      # Popover pengaturan editor
+│   ├── FileSidebar.tsx         # Sidebar file manager
+│   ├── DocumentOutline.tsx     # Panel outline dokumen
+│   ├── MermaidBlock.tsx        # Renderer diagram Mermaid
+│   ├── DropOverlay.tsx         # Overlay drag & drop
+│   └── ui/                    # Komponen shadcn/ui
+├── hooks/
+│   ├── useMarkdownFiles.ts    # Hook manajemen file markdown
+│   └── use-mobile.tsx         # Hook deteksi perangkat mobile
+├── stores/
+│   └── useEditorStore.ts      # Zustand store untuk state editor
+├── types/
+│   └── markdown.ts            # TypeScript types & konten default
+├── pages/
+│   └── Index.tsx              # Halaman utama
+└── index.css                  # Global styles & design tokens
+```
 
-## What technologies are used for this project?
+---
 
-This project is built with:
+## 🌐 Deployment
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Buka [Lovable](https://lovable.dev) dan klik **Share → Publish** untuk deploy aplikasi.
 
-## How can I deploy this project?
+Atau deploy secara mandiri menggunakan platform hosting statis seperti Vercel, Netlify, atau Cloudflare Pages.
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+## 📄 Lisensi
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+MIT License — Bebas digunakan untuk proyek personal maupun komersial.
