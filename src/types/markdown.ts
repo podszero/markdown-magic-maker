@@ -8,72 +8,123 @@ export interface MarkdownFile {
 
 export const DEFAULT_CONTENT = `# Selamat Datang di Markdown Editor ✍️
 
-Editor ini mendukung **GitHub Flavored Markdown** dengan live preview, mirip seperti **Typora**.
+Editor ini mendukung **GitHub Flavored Markdown**, **Syntax Highlighting**, **Mermaid Diagram**, dan **LaTeX Math**.
 
 ## Fitur Utama
 
 - 📁 **File Manager** — Buat, buka, rename, dan hapus file
 - 🔍 **Search** — Cari file berdasarkan judul atau isi
-- ✏️ **Editor** — Toolbar lengkap untuk formatting
-- 👁️ **Preview** — Live preview dengan split view
-- 📊 **Statistik** — Word count, character count, read time
-- 🎯 **Focus Mode** — Mode fokus tanpa gangguan
-- 📑 **Outline** — Navigasi heading dokumen
+- 🎨 **Syntax Highlighting** — Highlight kode otomatis
+- 📐 **LaTeX Math** — Rumus matematika inline dan block
+- 📊 **Mermaid Diagram** — Flowchart, sequence, dll
+- 🌙 **Dark Mode** — Toggle tema gelap/terang
 
-## Markdown Syntax
+---
 
-### Teks Formatting
-
-**Bold text**, *italic text*, ~~strikethrough~~, \`inline code\`
-
-### Daftar
-
-- Item satu
-- Item dua
-  - Sub item
-  - Sub item lagi
-
-1. Langkah pertama
-2. Langkah kedua
-3. Langkah ketiga
-
-### Blockquote
-
-> "Kesederhanaan adalah kecanggihan tertinggi."
-> — Leonardo da Vinci
-
-### Kode
+## Syntax Highlighting
 
 \`\`\`javascript
-function fibonacci(n) {
-  if (n <= 1) return n;
-  return fibonacci(n - 1) + fibonacci(n - 2);
-}
+// JavaScript dengan syntax highlighting
+const greet = (name) => {
+  console.log(\`Hello, \${name}!\`);
+  return { message: \`Welcome, \${name}\` };
+};
 
-console.log(fibonacci(10)); // 55
+greet("World");
 \`\`\`
 
-### Tabel
+\`\`\`python
+# Python
+def fibonacci(n: int) -> list[int]:
+    fib = [0, 1]
+    for i in range(2, n):
+        fib.append(fib[i-1] + fib[i-2])
+    return fib
 
-| Fitur | Shortcut | Status |
-| ----- | -------- | ------ |
-| Bold | Ctrl+B | ✅ |
-| Italic | Ctrl+I | ✅ |
-| Save | Ctrl+S | ✅ |
-| Search | Ctrl+F | ✅ |
+print(fibonacci(10))
+\`\`\`
 
-### Checklist
+\`\`\`css
+/* CSS */
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+}
+\`\`\`
 
-- [x] Buat editor
-- [x] Tambah file management
-- [x] Tambah search
-- [ ] Tambah export PDF
+---
 
-### Link & Gambar
+## LaTeX Math
 
-[Kunjungi GitHub](https://github.com)
+### Inline Math
 
-### Horizontal Rule
+Rumus Einstein: $E = mc^2$, dan integral $\\int_0^\\infty e^{-x} dx = 1$.
+
+### Block Math
+
+Rumus kuadrat:
+
+$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
+
+Identitas Euler:
+
+$$e^{i\\pi} + 1 = 0$$
+
+Deret Taylor:
+
+$$f(x) = \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(a)}{n!}(x-a)^n$$
+
+Matriks:
+
+$$A = \\begin{pmatrix} 1 & 2 & 3 \\\\ 4 & 5 & 6 \\\\ 7 & 8 & 9 \\end{pmatrix}$$
+
+---
+
+## Mermaid Diagrams
+
+### Flowchart
+
+\`\`\`mermaid
+graph TD
+    A[Start] --> B{Apakah valid?}
+    B -->|Ya| C[Proses Data]
+    B -->|Tidak| D[Tampilkan Error]
+    C --> E[Simpan ke DB]
+    D --> F[Kembali ke Form]
+    E --> G[Selesai]
+    F --> A
+\`\`\`
+
+### Sequence Diagram
+
+\`\`\`mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant A as API
+    participant D as Database
+
+    U->>F: Klik Submit
+    F->>A: POST /data
+    A->>D: INSERT query
+    D-->>A: Success
+    A-->>F: 200 OK
+    F-->>U: Tampilkan sukses
+\`\`\`
+
+---
+
+## Tabel
+
+| Fitur | Status | Shortcut |
+| ----- | ------ | -------- |
+| Bold | ✅ | Ctrl+B |
+| Italic | ✅ | Ctrl+I |
+| LaTeX | ✅ | — |
+| Mermaid | ✅ | — |
+| Highlight | ✅ | — |
 
 ---
 

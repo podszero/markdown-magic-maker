@@ -1,11 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { useDropzone } from "react-dropzone";
 import MarkdownToolbar from "./MarkdownToolbar";
 import FileSidebar from "./FileSidebar";
 import DocumentOutline from "./DocumentOutline";
 import DropOverlay from "./DropOverlay";
+import MarkdownPreview from "./MarkdownPreview";
 import { useMarkdownFiles } from "@/hooks/useMarkdownFiles";
 import {
   FileText,
@@ -314,8 +313,8 @@ const MarkdownEditor = () => {
                 style={{ background: "hsl(var(--preview-bg))" }}
               >
                 <div className="flex-1 overflow-y-auto custom-scroll p-4 md:p-8">
-                  <div className="max-w-3xl mx-auto markdown-preview">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                  <div className="max-w-3xl mx-auto">
+                    <MarkdownPreview content={content} />
                   </div>
                 </div>
               </div>
